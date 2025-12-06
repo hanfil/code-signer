@@ -1,0 +1,7 @@
+*.pem
+*.srl
+*.pfx
+*.sig
+*.exe
+*.cnf
+go.sum
