@@ -12,9 +12,8 @@ A utility for signing PE (Windows) executables with Authenticode signatures from
 
 ## Prerequisites
 
-- Go 1.16 or later
 - `osslsigncode` (for creating Authenticode signatures)
-- Self-signed certificate and private key (PEM format)
+- Optional: Self-signed certificate and private key (PEM format)
 - Optional: Timestamp server for trusted timestamps
 
 ## Installation
@@ -26,14 +25,6 @@ A utility for signing PE (Windows) executables with Authenticode signatures from
 sudo apt-get install osslsigncode
 ```
 
-**macOS:**
-```bash
-brew install osslsigncode
-```
-
-**Other Linux distributions:**
-Build from source: https://github.com/mtrojnar/osslsigncode
-
 ## Usage
 
 ### Generating Certificates (Recommended)
@@ -41,9 +32,6 @@ Build from source: https://github.com/mtrojnar/osslsigncode
 The easiest way is to use the built-in certificate generator:
 
 ```bash
-go run . -mode gencert
-
-# Or using the binary
 ./CodeSigner -mode gencert
 ```
 
@@ -72,7 +60,7 @@ This interactive tool:
 If you already have a CA and want to generate additional application certificates:
 
 ```bash
-go run build/signer.go -mode gencert
+./CodeSigner -mode gencert
 # When prompted "Use existing CA? (y/n) [n]:" type "y"
 # Provide paths to your existing ca-key.pem and ca-cert.pem
 ```
@@ -100,10 +88,10 @@ Sign a PE executable with an Authenticode signature using the PKCS#12 bundle:
 
 ```bash
 # Using PKCS#12 bundle (recommended, most compatible)
-go run build/signer.go -mode sign -key subfuz.pfx -binary ./subfuz.exe -output ./subfuz-signed.exe
+./CodeSigner -mode sign -key subfuz.pfx -binary ./subfuz.exe -output ./subfuz-signed.exe
 
 # Or using separate PEM files
-go run build/signer.go -mode sign -cert certificate.pem -key private_key.pem -binary ./subfuz.exe -output ./subfuz-signed.exe
+./CodeSigner -mode sign -cert certificate.pem -key private_key.pem -binary ./subfuz.exe -output ./subfuz-signed.exe
 ```
 
 **Note:** The `-output` flag is required to prevent accidentally overwriting your original unsigned binary.
@@ -121,7 +109,7 @@ go run build/signer.go -mode sign -cert certificate.pem -key private_key.pem -bi
 Verify an Authenticode signature using osslsigncode:
 
 ```bash
-go run build/signer.go -mode verify -binary ./subfuz-signed.exe
+./CodeSigner -mode verify -binary ./subfuz-signed.exe
 ```
 
 ### Verifying a Signature (Windows-side)
@@ -143,41 +131,6 @@ Get-AuthenticodeSignature .\subfuz-signed.exe
 
 **Note**: Self-signed certificates show "UnknownError" because they're not trusted by Windows. For production, use a CA-signed certificate.
 
-## Example Workflow
-
-```bash
-# 1. Generate CA and application certificate (interactive)
-go run build/signer.go -mode gencert
-# Follow the prompts:
-# - Choose whether to use existing CA or create new
-# - Enter location (Country, State, City) - defaults to Oslo, NO
-# - Enter CA organization and name
-# - Enter email address for CA
-# - Add URLs (e.g., GitHub profile) - press Enter to finish
-# - Enter application organization and name
-# - Enter email address for application
-
-# 2. Build the application
-go build -o subfuz.exe ./
-
-# 3. Sign the binary using PKCS#12 bundle
-go run build/signer.go -mode sign -key subfuz.pfx -binary subfuz.exe -output subfuz-signed.exe
-
-# 4. Verify from Linux
-go run build/signer.go -mode verify -binary subfuz-signed.exe
-
-# 5. Transfer to Windows and verify there
-# (On Windows PowerShell)
-# Get-AuthenticodeSignature .\subfuz-signed.exe
-```
-
-**What's generated:**
-- `ca-key.pem` - CA private key (4096-bit, KEEP SECURE!)
-- `ca-cert.pem` - CA certificate (valid 20 years, reusable)
-- `private_key.pem` - Application private key (2048-bit)
-- `certificate.pem` - Application certificate (valid 10 years)
-- `subfuz.pfx` - **PKCS#12 bundle with full certificate chain** (use this for signing)
-
 ## Supported Binary Formats
 
 Currently only PE (Windows) binaries with Authenticode signatures are supported:
@@ -186,7 +139,7 @@ Currently only PE (Windows) binaries with Authenticode signatures are supported:
 |--------|-----------|----------|
 | PE     | .exe, .dll | Windows |
 
-ELF (Linux) binaries cannot use Authenticode signatures—they use different signing mechanisms (e.g., gpg signatures).
+ELF (Linux) binaries cannot use Authenticode signatures—they use different signing mechanisms (e.g., gpg signatures). When signing an ELF binary, the tool will generate a separate `.sig` signature file instead.
 
 ## Cryptographic Details
 
@@ -208,7 +161,7 @@ Using a trusted timestamp server ensures the signature remains valid even after 
 
 ```bash
 # With a timestamp server (optional)
-go run build/signer.go -mode sign -key subfuz.pfx -ts "http://timestamp.globalsign.com/scripts/timstamp.dll" -binary subfuz.exe -output subfuz-signed.exe
+./CodeSigner -mode sign -key subfuz.pfx -ts "http://timestamp.globalsign.com/scripts/timstamp.dll" -binary subfuz.exe -output subfuz-signed.exe
 ```
 
 **Popular timestamp servers:**
@@ -259,23 +212,23 @@ Then use without `go run`:
 - **The timestamp server can also cause this issue**
 - **Solution**: Use the PKCS#12 bundle without timestamp:
   ```bash
-  go run . -mode gencert
-  go run . -mode sign -key subfuz.pfx -binary subfuz.exe -output subfuz-signed.exe
+./CodeSigner -mode gencert
+  ./CodeSigner -mode sign -key subfuz.pfx -binary subfuz.exe -output subfuz-signed.exe
   ```
 - If you need timestamps, try adding after signing works:
   ```bash
-  go run . -mode sign -key subfuz.pfx -ts "http://timestamp.globalsign.com/scripts/timstamp.dll" -binary subfuz.exe -output subfuz-signed.exe
+  ./CodeSigner -mode sign -key subfuz.pfx -ts "http://timestamp.globalsign.com/scripts/timstamp.dll" -binary subfuz.exe -output subfuz-signed.exe
   ```
 
 **Error: "certificate file not found" or "private key file not found"**
 - Generate them automatically:
   ```bash
-  go run . -mode gencert
+  ./CodeSigner -mode gencert
   ```
 - Or check that files exist in current directory: `ls -la *.pem *.pfx`
 - Or specify full paths:
   ```bash
-  go run . -mode sign -cert /full/path/certificate.pem -key /full/path/private_key.pem -binary subfuz.exe -output subfuz-signed.exe
+  ./CodeSigner -mode sign -cert /full/path/certificate.pem -key /full/path/private_key.pem -binary subfuz.exe -output subfuz-signed.exe
   ```
 
 **Error: "binary is not a valid PE (Windows) executable"**
@@ -284,11 +237,11 @@ Then use without `go run`:
 
 **Windows shows "NotSigned"**
 - The binary may not have been signed correctly
-- Try verifying on Linux first: `go run . -mode verify -binary subfuz-signed.exe`
+- Try verifying on Linux first: `./CodeSigner -mode verify -binary subfuz-signed.exe`
 - Rebuild and sign again:
   ```bash
-  go run . -mode gencert
-  go run . -mode sign -key subfuz.pfx -binary subfuz.exe -output subfuz-signed.exe
+  ./CodeSigner -mode gencert
+  ./CodeSigner -mode sign -key subfuz.pfx -binary subfuz.exe -output subfuz-signed.exe
   ```
 
 **Windows shows "UnknownError" for signature status**
@@ -330,3 +283,11 @@ go run . -mode sign \
   -key private_key.pem \
   -binary subfuz.exe
 ```
+
+## Contributing
+
+For project structure, development workflow, detailed flags, and advanced guidance, see `CONTRIBUTING.md`.
+
+## License
+
+Apache License 2.0. See `LICENSE`.

@@ -1,14 +1,15 @@
-# Code Signer - Project Reorganization Complete
+# Contributing to Code Signer
 
-## New Project Structure
+Thank you for your interest in contributing to Code Signer! This document provides guidance on how to work with our codebase, understand the project structure, and make meaningful contributions.
 
-The project has been reorganized into a clean, modular structure following Go best practices:
+## Project Structure
+
+Code Signer is organized into a clean, modular structure following Go best practices:
 
 ```
 code-signer/
 ├── main.go                     # Entry point (ONLY Go file in root)
 ├── go.mod                      # Go module definition
-├── go.sum                       # Dependency checksums
 │
 ├── cmd/                        # Executable commands
 │   ├── gencert/
@@ -24,15 +25,12 @@ code-signer/
 │   └── crypto/
 │       └── operations.go      # Cryptographic operations
 │
-├── ca-cert.pem               # Generated CA certificate
-├── ca-key.pem                # Generated CA private key
-├── ca-cert.srl               # Certificate serial numbers
 │
 ├── README.md                  # Project documentation
-└── FILE_GUIDE.md              # Quick reference guide
+└── CONTRIBUTING.md            # Contribution guidelines
 ```
 
-## Package Organization
+## Code Organization
 
 ### main.go (Root Level)
 **Purpose**: Application entry point and CLI dispatcher
@@ -51,8 +49,6 @@ import (
 )
 ```
 
----
-
 ### cmd/gencert/generate.go
 **Purpose**: Certificate generation and management
 
@@ -61,8 +57,6 @@ import (
 - Code signing certificate generation
 - OpenSSL integration
 - PKCS#12 bundle creation
-
----
 
 ### cmd/sign/handler.go
 **Purpose**: Binary signing and verification
@@ -81,8 +75,6 @@ import (
 )
 ```
 
----
-
 ### pkg/crypto/operations.go
 **Purpose**: Cryptographic operations library
 
@@ -96,8 +88,6 @@ import (
 
 **Key Feature**: Can be imported and used as a standalone cryptography library
 
----
-
 ### pkg/binary/format.go
 **Purpose**: Binary format detection and validation
 
@@ -108,8 +98,6 @@ import (
 **Detection**:
 - PE: Magic number 0x4D5A (MZ header)
 - ELF: Magic number 0x7F454C46 (0x7F 'E' 'L' 'F')
-
----
 
 ## Import Structure
 
@@ -129,12 +117,33 @@ main.go (root)
         └→ github.com/fatih/color
 ```
 
-## Building and Running
+## Getting Started
+
+### Prerequisites
+- Go 1.16 or higher
+- OpenSSL (for certificate generation)
+- Git
+
+### Building the Project
 
 ```bash
+# Clone the repository
+git clone https://github.com/hanfil/code-signer.git
+cd code-signer
+
+# Install dependencies
+go mod download
+
 # Build the application
 go build
 
+# Run tests (if available)
+go test ./...
+```
+
+## Running the Application
+
+```bash
 # Run directly
 go run .
 
@@ -142,7 +151,56 @@ go run .
 go run . -mode gencert
 go run . -mode sign -key file.pem -binary app.exe
 go run . -mode verify -binary app.exe
+
+# Build and run the compiled binary
+./CodeSigner -mode gencert
 ```
 
+## Making Changes
 
+### Code Style
+- Follow Go conventions and best practices
+- Use `gofmt` for consistent formatting
+- Keep functions focused and well-documented
+- Add comments for exported functions and complex logic
 
+### Adding Features
+1. Create features in appropriate packages (`cmd/` for commands, `pkg/` for libraries)
+2. Keep dependencies minimal
+3. Update this CONTRIBUTING.md if structure changes
+4. Ensure backward compatibility when possible
+
+### Testing
+Before submitting changes:
+- Test locally with `go test ./...`
+- Test the built binary with various inputs
+- Verify both Windows (PE) and Linux (ELF) compatibility where applicable
+
+## Submitting Contributions
+
+1. **Fork** the repository
+2. **Create a feature branch** (`git checkout -b feature/your-feature`)
+3. **Make your changes** following the code style guidelines
+4. **Test thoroughly** 
+5. **Commit with clear messages** (`git commit -m 'Add feature description'`)
+6. **Push** to your fork (`git push origin feature/your-feature`)
+7. **Submit a Pull Request** with a clear description of changes
+
+## Code Review Process
+
+- All submissions will be reviewed for:
+  - Code quality and style
+  - Adherence to project structure
+  - Performance implications
+  - Security considerations
+  - Documentation completeness
+
+## License
+
+By contributing to Code Signer, you agree that your contributions will be licensed under the Apache License 2.0. See [LICENSE](LICENSE) for details.
+
+## Questions?
+
+If you have questions about contributing or the codebase structure, feel free to open an issue or discussion on GitHub.
+
+Thank you for helping make Code Signer better!
