@@ -1,6 +1,6 @@
 # Contributing to Code Signer
 
-Thank you for your interest in contributing to Code Signer! This document provides guidance on how to work with our codebase, understand the project structure, and make meaningful contributions.
+Thank you for your interest in contributing to Code Signer! This document provides guidance on how to work with the codebase and understand the project structure.
 
 ## Project Structure
 
@@ -202,5 +202,3 @@ By contributing to Code Signer, you agree that your contributions will be licens
 ## Questions?
 
 If you have questions about contributing or the codebase structure, feel free to open an issue or discussion on GitHub.
-
-Thank you for helping make Code Signer better!
